@@ -48,16 +48,81 @@
                  (rember1* a (cdr l)))))))
 |#
 
+#| cf hard to know nested depth ver
 (define depth*
   (lambda (l)
     (cond ((null? l) 1)
-          ((atom? (car l)) (depth* (cdr l)))
+          (else 
+           (let ((d (depth* (cdr l))))
+             (cond ((atom? (car l)) d)
+                   (else
+                    (let ((a (depth* (car l))))
+                      (cond ((> d (+ a 1)) d)
+                            (else
+                             (+ a 1)))))))))))
+|#
+
+#|
+(define depth*
+  (lambda (l)
+    (cond ((null? l) 1)
+          ((atom? (car l))
+           (depth* (cdr l)))
           (else
-           (cond ((> (depth* (cdr l)) (+ (depth* (car l)) 1))
-                  (depth* (cdr l)))
-                 (else
-                  (+ (depth* (car l)) 1)))))))
+           (let ((a (depth* (car l)))
+                 (d (depth* (cdr l))))
+             (cond ((> d (+ a 1)) d)
+                   (else (+ a 1))))))))
+|#
+
+(define maxx
+  (lambda (a b)
+    (if (> a b) a b)))
+
+#| more beautiful
+(define depth*
+  (lambda (l)
+    (cond ((null? l) 1)
+          ((atom? (car l))
+           (depth* (cdr l)))
+          (else
+           (let ((a (+ (depth* (car l)) 1))
+                 (d (depth* (cdr l))))
+             (max a d))))))
+|#
+
+; most beautiful! perfect!
+(define depth*
+  (lambda (l)
+    (cond ((null? l) 1)
+          ((atom? (car l))
+           (depth* (cdr l)))
+          (else
+           (max
+            (+ (depth* (car l)) 1)
+            (depth* (cdr l)))))))
+
+(define pick
+  (lambda (a lat)
+    (cond ((= a 1) (car lat))
+          (else
+           (pick (- a 1) (cdr lat))))))
+
+; revised scramble
+(define scramble
+  (lambda (tup)
+    (letrec
+        ((S (lambda (tup pre)
+              (cond ((null? tup) '())
+                    (else
+                     (let ((next-pre (cons (car tup) pre)))
+                     (cons (pick (car tup) next-pre)
+                           (S (cdr tup) next-pre))))))))
+      (S tup '()))))
+
+
 
 (leftmost '((swedish rye) (french (mustard salad turkey)) salad))
 (rember1* 'salad '((swedish rye) (french (mustard salad turkey)) salad))
 (depth* '(c (b (a b) a) a))
+(scramble '(1 1 1 3 4 2 1 1 9 2))
