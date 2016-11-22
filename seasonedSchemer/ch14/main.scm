@@ -2,6 +2,7 @@
   (lambda (s)
     (and (not (pair? s)) (not (null? s)))))
 
+#|
 (define leftmost
   (lambda (l)
       (cond ((null? l) '())
@@ -10,7 +11,7 @@
              (let ((a (leftmost (car l))))
                (cond ((atom? a) a)
                      (else (leftmost (cdr l)))))))))
-
+|#
 (define eqlist?
   (lambda (l1 l2)
     (cond ((and (null? l1) (null? l2)) #t)
@@ -120,9 +121,47 @@
                            (S (cdr tup) next-pre))))))))
       (S tup '()))))
 
+; revised leftmost
+(define leftmost
+  (lambda (l)
+    (call-with-current-continuation
+     (lambda (return)
+       (letrec
+           ((lm (lambda (l)
+                  (cond
+                    ((null? l) '())
+                    ((atom? (car l))
+                     (return (car l)))
+                    (else
+                     (let ()
+                       (lm (car l))
+                       (lm (cdr l))))))))
+         (lm l))))))
+
+; so so difficult!
+(define rember1**
+  (lambda (a l oh)
+    (cond
+      ((null? l) (oh 'no))
+      ((atom? (car l))
+       (if (eq? (car l) a)
+           (cdr l)
+           (cons (car l)
+                 (rember1** a (cdr l) oh))))
+      (else
+       (if (atom?
+            (call-with-current-continuation
+             (lambda (oh)
+               (rember1** a (car l) oh))))
+           (cons (car l)
+                 (rember1** a (cdr l) oh))
+           (cons (rember1** a (car l) oh)
+                 (cdr l)))))))
+
 
 
 (leftmost '((swedish rye) (french (mustard salad turkey)) salad))
-(rember1* 'salad '((swedish rye) (french (mustard salad turkey)) salad))
+(rember1** 'salad '((swedish rye) (french (mustard salad turkey)) salad) 1)
 (depth* '(c (b (a b) a) a))
 (scramble '(1 1 1 3 4 2 1 1 9 2))
+(rember1** 'Say '((food) more (food)) 1)
